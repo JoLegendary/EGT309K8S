@@ -7,6 +7,6 @@ WORKDIR /
 # Copy the script and the test.txt file into the container's /app directory
 COPY . .
 RUN pip install -r requirements.txt
-EXPOSE 6650
+EXPOSE 8080
 # Command to run the script.py
-CMD ["python", "flask_preprocessing.py"]
+CMD ["python", "gui.py"]
