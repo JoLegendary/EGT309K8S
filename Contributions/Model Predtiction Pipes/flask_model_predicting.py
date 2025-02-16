@@ -60,9 +60,7 @@ def upload_files():
 
 @app.route('/poll', methods=['POST'])
 def poll():
-    print(f"{session.get("id","No id yet")} is logged in")
-    if session.get("id") is None: session["id"] = 1
-    return str(session.get('id'))
+    return cookie_dict
 
 
 def predicting_the_test_dataset(clean_data, predict_data, loaded_model, session_id):
