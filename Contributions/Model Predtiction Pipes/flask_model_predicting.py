@@ -1,76 +1,93 @@
-from flask import Flask, request, send_file
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import accuracy_score
+import joblib
+import os
+from flask import Flask, request, send_file, session
 import pandas as pd
+from sklearn.linear_model import LinearRegression
 import pickle
 from io import BytesIO
-import os
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
+import random
 
 app = Flask(__name__)
-
+app.secret_key = '1'
+cookie_dict = {}
 @app.route('/upload', methods=['POST'])
-def upload_files():
-    # Get files from request
+def upload_csv():
+    # Get the CSV file from the request
+    print(f"{session.get("id","No id yet")} is logged in")
+    if session.get("id") is None:
+        while True:
+            rand = random.randint(1, 2**64)
+            if not cookie_dict.get(rand):
+                cookie_dict.update({rand:{"0-0": "Starting", "percentage": 0}})
+                break
+        session["id"] = rand
+    if not cookie_dict.get(session.get("id")):
+        cookie_dict.update({session.get("id"):{"0-0": "Starting", "percentage": 0}})
+    session_id = session.get("id")
     csv_file = request.files.get('csv')
-    pkl_file = request.files.get('pkl')
+
+    # Check if the CSV file is provided
+    if not csv_file:
+        return "CSV file is required!", 400
+
+    # Read the CSV file into a DataFrame
+    df = pd.read_csv(csv_file)
+    parameters =  { "n_estimators": [50, 100, 200],
+        "max_depth": [None, 10, 20, 30],
+        "min_samples_split": [2, 5, 10],
+        "min_samples_leaf": [1, 2, 4]}
     
-    # Check if files are provided
-    if not csv_file or not pkl_file:
-        return "CSV and PKL files are required!", 400
+    cookie_dict[session_id]["1-1"] = cookie_dict[session_id].pop("0-0")
+    cookie_dict[session_id]["1-1"] = "File Read"
+    cookie_dict[session_id]["percentage"] = 5
+
+    model_pkl = random_forest_train(df, ['Age', 'Sex', 'Pclass', 'SibSp', 'Parch'], 'Survived', parameters, session_id)
+
+    cookie_dict[session_id]["2-1"] = cookie_dict[session_id].pop("1-3")
+    cookie_dict[session_id]["2-1"] = "Finishing Model Training"
+    cookie_dict[session_id]["percentage"] = 100
+
+    # Send the pickled model back as a response
+    return send_file(model_pkl, mimetype='application/octet-stream', as_attachment=True, download_name="model.pkl"), 222
+
+
+@app.route('/poll', methods=['POST'])
+def poll():
+
+    return str(session.get('id'))
+
+def random_forest_train(df, xfeature, ytarget, parameters, session_id):
+    X = df[xfeature]
+    y = df[ytarget]
+
+    # Split data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
+
+    cookie_dict[session_id]["1-2"] = cookie_dict[session_id].pop("1-1")
+    cookie_dict[session_id]["1-2"] = "Starting model Training, This will take a long time"
+    cookie_dict[session_id]["percentage"] = 10
+
+    rf = RandomForestClassifier(random_state=42)
+    rf_grid = GridSearchCV(rf, parameters, cv=5, scoring='accuracy')
+    rf_grid.fit(X_train, y_train)
+
+    # Predict with best random forest model
+    best_rf = rf_grid.best_estimator_
     
-    # Read CSV file into a pandas DataFrame
-    csv_df = pd.read_csv(csv_file)
-    
-    # Read PKL file into a model or data (adjust depending on your use case)
-    model = pickle.load(pkl_file)
-    csv_df = combined_data_preparation(csv_df, ['Age', 'Ticket', 'PassengerId', 'Embarked', 'Name', 'Cabin'])
-    # Example processing: Let's assume the model is used to make predictions
-    # Assuming the model is a regression model and csv_df has required features for prediction
-    clean_data = csv_df
-    csv_df = predicting_the_test_dataset(clean_data, csv_df, model)
-    # Convert the processed DataFrame to CSV (in-memory)
-    output = BytesIO()
-    csv_df.to_csv(output, index=False)
-    output.seek(0)
+    cookie_dict[session_id]["1-3"] = cookie_dict[session_id].pop("1-2")
+    cookie_dict[session_id]["1-3"] = "Model Done Training, saving pkl file"
+    cookie_dict[session_id]["percentage"] = 90
 
-    # Send back the processed CSV as a response
-    return send_file(output, mimetype='text/csv', as_attachment=True, download_name="processed_output.csv"), 223
-
-def predicting_the_test_dataset(clean_data, predict_data, loaded_model):
-
-    predict_data['predicted_survived'] = loaded_model.predict(clean_data[['Age', 'Sex', 'Pclass', 'SibSp', 'Parch']])
-    return predict_data
-
-
-def binary_sex(data):
-    data['Sex'] = data['Sex'].replace({'male': 0, 'female': 1})
-    print("Binary Sex done")
-    return data
-
-def add_age_with_model(data, xfeature):
-    data_non_missing = data[data['Age'].notna()]
-
-    X = data_non_missing.drop(columns=xfeature)  # Features
-    y = data_non_missing['Age']                   # Target
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    model = RandomForestRegressor()
-    model.fit(X_train, y_train)
-    missing_ages = data[data['Age'].isna()]
-    X_missing = missing_ages.drop(columns=xfeature)
-
-    predicted_ages = model.predict(X_missing)
-
-    # Fill the missing values in the original DataFrame
-    data.loc[data['Age'].isna(), 'Age'] = predicted_ages
-    print("Adding Missing Age done")
-    return data
-
-def combined_data_preparation(data, xfeature):
-    data = binary_sex(data)
-    data = add_age_with_model(data, xfeature)
-    return data
+    model_pkl = BytesIO()
+    pickle.dump(best_rf, model_pkl)
+    model_pkl.seek(0)  # Go to the beginning of the byte stream
+    return model_pkl
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=6652)
+    app.run(debug=True, port=6651)
+
