@@ -1,4 +1,5 @@
 streamlit >= 1.42.0
 streamlit-flow-component
+streamlit-cookies-controller
 regex
 joblib
