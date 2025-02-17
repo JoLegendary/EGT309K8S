@@ -82,8 +82,8 @@ def random_forest_train(df, xfeature, ytarget, parameters, session_id):
     model_pkl = BytesIO()
     pickle.dump(best_rf, model_pkl)
     model_pkl.seek(0)  # Go to the beginning of the byte stream
-    pkl = "model" + session.get("id") + ".pkl"
-    with open(pkl, "wb") as f:
+
+    with open("/data/model.pkl", "wb") as f:
         pickle.dump(best_rf, f)
     return model_pkl
 

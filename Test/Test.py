@@ -28,7 +28,7 @@ print(response_train.status_code)
 
 pred = {
     'csv': ('data.csv', test_data, 'text/csv'),
-    'pkl': ('model.pkl', response_train.content, 'application/octet-stream'),
+    'pkl': None, #('model.pkl', response_train.content, 'application/octet-stream'),
 }
 response_pred = requests.post(url_pred, files=pred)
 

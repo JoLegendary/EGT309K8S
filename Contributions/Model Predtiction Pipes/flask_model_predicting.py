@@ -37,8 +37,7 @@ def upload_files():
     if pkl_file:
         model = pickle.load(pkl_file)
     else:
-        pkl = "model" + session.get("id") + ".pkl"
-        with open(pkl, "rb") as f:
+        with open("/data/model.pkl", "rb") as f:
             model = pickle.load(f)
 
     cookie_dict[session_id]["status"] = "1-1:Files Read, Preparing test data"
