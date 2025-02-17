@@ -28,113 +28,85 @@ spec:
   storageClassName: my-storage-class
 
 ---
-# ------------------ Deployment 1 ------------------
-apiVersion: apps/v1
-kind: Deployment
+# ------------------ Pod 1 ------------------
+apiVersion: v1
+kind: Pod
 metadata:
   name: data-prep
+  labels:
+    app: shared
 spec:
-  replicas: 3  # Adjust replicas
-  selector:
-    matchLabels:
-      app: shared
-  template:
-    metadata:
-      labels:
-        app: shared  # Shared label for service
-    spec:
-      containers:
-      - name: data-prep-container
-        image: my-data-prep-image:latest  # Replace with your image
-        ports:
-        - containerPort: 6650
+  containers:
+  - name: data-prep-container
+    image: alaxcia/egt309dataprep:v1
+    ports:
+    - containerPort: 6650
 
 ---
-# ------------------ Deployment 2 ------------------
-apiVersion: apps/v1
-kind: Deployment
+# ------------------ Pod 2 ------------------
+apiVersion: v1
+kind: Pod
 metadata:
   name: model-train
+  labels:
+    app: shared
 spec:
-  replicas: 5
-  selector:
-    matchLabels:
-      app: shared
-  template:
-    metadata:
-      labels:
-        app: shared
-    spec:
-      containers:
-      - name: model-train-container
-        image: my-model-train-image:latest
-        ports:
-        - containerPort: 6651
-        volumeMounts:
-        - mountPath: "/data"
-          name: shared-storage
-      volumes:
-      - name: shared-storage
-        persistentVolumeClaim:
-          claimName: my-pvc
+  containers:
+  - name: model-train-container
+    image: alaxcia/egt309modeltrain:v1
+    ports:
+    - containerPort: 6651
+    volumeMounts:
+    - mountPath: "/data"
+      name: shared-storage
+  volumes:
+  - name: shared-storage
+    persistentVolumeClaim:
+      claimName: my-pvc
 
 ---
-# ------------------ Deployment 3 ------------------
-apiVersion: apps/v1
-kind: Deployment
+# ------------------ Pod 3 ------------------
+apiVersion: v1
+kind: Pod
 metadata:
   name: model-pred
+  labels:
+    app: shared
 spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: shared
-  template:
-    metadata:
-      labels:
-        app: shared
-    spec:
-      containers:
-      - name: model-pred-container
-        image: my-model-pred-image:latest
-        ports:
-        - containerPort: 6652
-        volumeMounts:
-        - mountPath: "/data"
-          name: shared-storage
-      volumes:
-      - name: shared-storage
-        persistentVolumeClaim:
-          claimName: my-pvc
+  containers:
+  - name: model-pred-container
+    image: alaxcia/egt309modelpred:v1
+    ports:
+    - containerPort: 6652
+    volumeMounts:
+    - mountPath: "/data"
+      name: shared-storage
+  volumes:
+  - name: shared-storage
+    persistentVolumeClaim:
+      claimName: my-pvc
 
 ---
-# ------------------ Deployment 4 ------------------
-apiVersion: apps/v1
-kind: Deployment
+# ------------------ Pod 4 ------------------
+apiVersion: v1
+kind: Pod
 metadata:
   name: gui
+  labels:
+    app: shared
 spec:
-  replicas: 4
-  selector:
-    matchLabels:
-      app: shared
-  template:
-    metadata:
-      labels:
-        app: shared
-    spec:
-      containers:
-      - name: gui-container
-        image: my-gui-image:latest
-        ports:
-        - containerPort: 8080
-        volumeMounts:
-        - mountPath: "/data"
-          name: shared-storage
-      volumes:
-      - name: shared-storage
-        persistentVolumeClaim:
-          claimName: my-pvc
+  containers:
+  - name: gui-container
+    image: alaxcia/egt309testrun:v1.2
+    ports:
+    - containerPort: 8080
+    volumeMounts:
+    - mountPath: "/data"
+      name: shared-storage
+  volumes:
+  - name: shared-storage
+    persistentVolumeClaim:
+      claimName: my-pvc
 
 ---
 # ------------------ Multi-Port Service ------------------
@@ -143,6 +115,7 @@ kind: Service
 metadata:
   name: multi-app-service
 spec:
+  sessionAffinity: ClientIP  # Sticky sessions enabled
   selector:
     app: shared  # Matches all 4 Deployments
   ports:

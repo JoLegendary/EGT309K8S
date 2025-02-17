@@ -22,11 +22,11 @@ def upload_csv():
         while True:
             rand = random.randint(1, 2**64)
             if not cookie_dict.get(rand):
-                cookie_dict.update({rand:{"0-0": "Starting", "percentage": 0}})
+                cookie_dict.update({rand:{"status": "0-0:Starting", "percentage": 0}})
                 break
         session["id"] = rand
     if not cookie_dict.get(session.get("id")):
-        cookie_dict.update({session.get("id"):{"0-0": "Starting", "percentage": 0}})
+        cookie_dict.update({session.get("id"):{"status": "0-0:Starting", "percentage": 0}})
     session_id = session.get("id")
     csv_file = request.files.get('csv')
 
@@ -41,14 +41,12 @@ def upload_csv():
         "min_samples_split": [2, 5, 10],
         "min_samples_leaf": [1, 2, 4]}
     
-    cookie_dict[session_id]["1-1"] = cookie_dict[session_id].pop("0-0")
-    cookie_dict[session_id]["1-1"] = "File Read"
+    cookie_dict[session_id]["status"] = '1-1:File Read'
     cookie_dict[session_id]["percentage"] = 5
 
     model_pkl = random_forest_train(df, ['Age', 'Sex', 'Pclass', 'SibSp', 'Parch'], 'Survived', parameters, session_id)
 
-    cookie_dict[session_id]["2-1"] = cookie_dict[session_id].pop("1-3")
-    cookie_dict[session_id]["2-1"] = "Finishing Model Training"
+    cookie_dict[session_id]["status"] = "2-1:Finishing Model Training"
     cookie_dict[session_id]["percentage"] = 100
 
     # Send the pickled model back as a response
@@ -57,7 +55,7 @@ def upload_csv():
 
 @app.route('/poll', methods=['POST'])
 def poll():
-    return cookie_dict
+    return cookie_dict[session.get("id")]
 
 def random_forest_train(df, xfeature, ytarget, parameters, session_id):
     X = df[xfeature]
@@ -66,8 +64,8 @@ def random_forest_train(df, xfeature, ytarget, parameters, session_id):
     # Split data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
 
-    cookie_dict[session_id]["1-2"] = cookie_dict[session_id].pop("1-1")
-    cookie_dict[session_id]["1-2"] = "Starting model Training, This will take a long time"
+
+    cookie_dict[session_id]["status"] = "1-2:Starting model Training, This will take a long time"
     cookie_dict[session_id]["percentage"] = 10
 
     rf = RandomForestClassifier(random_state=42)
@@ -77,8 +75,8 @@ def random_forest_train(df, xfeature, ytarget, parameters, session_id):
     # Predict with best random forest model
     best_rf = rf_grid.best_estimator_
 
-    cookie_dict[session_id]["1-3"] = cookie_dict[session_id].pop("1-2")
-    cookie_dict[session_id]["1-3"] = "Model Done Training, saving pkl file"
+
+    cookie_dict[session_id]["status"] = "1-3:Model Done Training, saving pkl file"
     cookie_dict[session_id]["percentage"] = 90
 
     model_pkl = BytesIO()
@@ -88,5 +86,5 @@ def random_forest_train(df, xfeature, ytarget, parameters, session_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=6651)
+    app.run(debug=True, port=6651, host='0.0.0.0')
 

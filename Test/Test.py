@@ -7,9 +7,9 @@ csv_data = open("train.csv").read()
 test_data = open('test.csv').read()
 # print(type(csv_data))
 # Send the files to Flask endpoint
-url_prep = 'http://127.0.0.1:6650/upload'
-url_train = 'http://127.0.0.1:6651/upload'
-url_pred = 'http://127.0.0.1:6652/upload'
+url_prep = 'http://data-prep-0.data-prep.default.svc.cluster.local:6650/upload'
+url_train = 'http://model-train-0.model-train.default.svc.cluster.local:6651/upload'
+url_pred = 'http://multi-app-service.default.svc.cluster.local:6652/upload'
 files = {
     'csv': ('data.csv', csv_data, 'text/csv'),
 }

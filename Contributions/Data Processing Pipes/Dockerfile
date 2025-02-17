@@ -9,4 +9,4 @@ COPY . .
 RUN pip install -r requirements.txt
 EXPOSE 6650
 # Command to run the script.py
-CMD ["python", "flask_preprocessing.py"]
+ENTRYPOINT ["python", "flask_preprocessing.py"]
