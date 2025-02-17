@@ -39,7 +39,7 @@ def upload_files():
     cookie_dict[session_id]["1-1"] = cookie_dict[session_id].pop("0-0")
     cookie_dict[session_id]["1-1"] = "File Read"
     cookie_dict[session_id]["percentage"] = 5
-
+    print(cookie_dict)
     csv_df = combined_data_preparation(csv_df, ['Age', 'Ticket', 'PassengerId', 'Embarked', 'Name', 'Cabin'], session_id)
 
     # Convert the processed DataFrame to CSV (in-memory)
@@ -50,7 +50,7 @@ def upload_files():
     cookie_dict[session_id]["2-1"] = cookie_dict[session_id].pop("1-5")
     cookie_dict[session_id]["2-1"] = "Finishing Data Preparation"
     cookie_dict[session_id]["percentage"] = 100
-
+    print(cookie_dict)
     # Send back the processed CSV as a response
     return send_file(output, mimetype='text/csv', as_attachment=True, download_name="processed_output.csv"), 221
 
@@ -71,7 +71,7 @@ def add_age_with_model(data, xfeature, session_id):
     cookie_dict[session_id]["1-3"] = cookie_dict[session_id].pop("1-2")
     cookie_dict[session_id]["1-3"] = "Training Model for missing ages, this will take a while"
     cookie_dict[session_id]["percentage"] = 30
-
+    print(cookie_dict)
     model = RandomForestRegressor()
     model.fit(X_train, y_train)
     missing_ages = data[data['Age'].isna()]
@@ -80,7 +80,7 @@ def add_age_with_model(data, xfeature, session_id):
     cookie_dict[session_id]["1-4"] = cookie_dict[session_id].pop("1-3")
     cookie_dict[session_id]["1-4"] = "Running Model to predict missing ages"
     cookie_dict[session_id]["percentage"] = 70
-
+    print(cookie_dict)
     predicted_ages = model.predict(X_missing)
     
     # Fill the missing values in the original DataFrame
@@ -89,7 +89,7 @@ def add_age_with_model(data, xfeature, session_id):
     cookie_dict[session_id]["1-5"] = cookie_dict[session_id].pop("1-4")
     cookie_dict[session_id]["1-5"] = "Added Missing Ages"
     cookie_dict[session_id]["percentage"] = 90
-
+    print(cookie_dict)
     return data
 
 def combined_data_preparation(data, xfeature, session_id):
@@ -98,7 +98,7 @@ def combined_data_preparation(data, xfeature, session_id):
     cookie_dict[session_id]["1-2"] = cookie_dict[session_id].pop("1-1")
     cookie_dict[session_id]["1-2"] = "Changed Sex Column to 0 or 1, now adding missing age"
     cookie_dict[session_id]["percentage"] = 15
-
+    print(cookie_dict)
     data = add_age_with_model(data, xfeature, session_id)
     return data
 

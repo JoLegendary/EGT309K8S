@@ -40,6 +40,7 @@ def upload_files():
     cookie_dict[session_id]["1-1"] = cookie_dict[session_id].pop("0-0")
     cookie_dict[session_id]["1-1"] = "Files Read, Preparing test data"
     cookie_dict[session_id]["percentage"] = 5
+    
     csv_df = combined_data_preparation(csv_df, ['Age', 'Ticket', 'PassengerId', 'Embarked', 'Name', 'Cabin'], session_id)
     # Example processing: Let's assume the model is used to make predictions
     # Assuming the model is a regression model and csv_df has required features for prediction
