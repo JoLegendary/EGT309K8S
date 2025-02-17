@@ -1,0 +1,8 @@
+[server]
+headless = true
+port = 8080
+
+[browser]
+serverAddress = "localhost"
+gatherUsageStats = true
+serverPort = 8080
