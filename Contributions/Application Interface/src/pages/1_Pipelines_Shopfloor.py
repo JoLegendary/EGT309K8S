@@ -3,8 +3,7 @@ from streamlit_flow import streamlit_flow
 from streamlit_flow.elements import StreamlitFlowNode, StreamlitFlowEdge
 from streamlit_flow.state import StreamlitFlowState
 
-import time
-import numpy as np
+import time, threading
 
 st.set_page_config(
   page_title="Shopfloor Demo",
@@ -50,3 +49,23 @@ flow_state = streamlit_flow('flow',
     allow_new_edges=True,
     min_zoom=0.0
 )
+
+st.button("Run Pipeline", on_click=lambda: print("Lmao"))
+
+xxx = 0
+class UpdateLoop:
+    @staticmethod
+    def update():
+        global xxx
+        if xxx % 100 == 0:
+            print(f"{xxx//100} looped")
+        xxx += 1
+    def __init__(self, loop=True):
+        self.stop = not(loop)
+        def target():
+            while not(self.stop):
+                self.update()
+                time.sleep(0.05)
+        self.__update_thread = threading.Thread(target=target)
+        self.__update_thread.start()
+UpdateLoop = UpdateLoop()
