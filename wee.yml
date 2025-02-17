@@ -121,15 +121,15 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: shared
+      app: share
   template:
     metadata:
       labels:
-        app: shared
+        app: share
     spec:
       containers:
       - name: gui-container
-        image: alaxcia/egt309testrun:v1.6
+        image: alaxcia/egt309gui:v1   #testrun:v1.6
         ports:
         - containerPort: 8080
         volumeMounts:
@@ -161,7 +161,17 @@ spec:
     - name: model-pred
       port: 6652
       targetPort: 6652
+  # Change to NodePort or LoadBalancer if needed
+# ------------------ GUI Service ------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: gui-service
+spec:
+  selector:
+    app: share
+  ports:
     - name: gui
-      port: 88
+      port: 80
       targetPort: 8080
   # Change to NodePort or LoadBalancer if needed

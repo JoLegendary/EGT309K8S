@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gui-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: selfsigned
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+spec:
+  rules:
+    - host: egt309.gui  # Replace with your domain or use a wildcard domain
+      http:
+        paths:
+          - path: /  # This will route to the 'gui' port
+            pathType: Prefix
+            backend:
+              service:
+                name: gui-service
+                port:
+                  name: gui
