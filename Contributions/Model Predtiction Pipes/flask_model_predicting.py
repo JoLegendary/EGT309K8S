@@ -29,14 +29,18 @@ def upload_files():
     pkl_file = request.files.get('pkl')
     
     # Check if files are provided
-    if not csv_file or not pkl_file:
-        return "CSV and PKL files are required!", 400
+    if not csv_file:
+        return "CSV is required!", 400
     
     # Read CSV file into a pandas DataFrame
     csv_df = pd.read_csv(csv_file)
-    
-    # Read PKL file into a model or data (adjust depending on your use case)
-    model = pickle.load(pkl_file)
+    if pkl_file:
+        model = pickle.load(pkl_file)
+    else:
+        pkl = "model" + session.get("id") + ".pkl"
+        with open(pkl, "rb") as f:
+            model = pickle.load(f)
+
     cookie_dict[session_id]["status"] = "1-1:Files Read, Preparing test data"
     cookie_dict[session_id]["percentage"] = 5
     
