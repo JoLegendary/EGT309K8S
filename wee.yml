@@ -1,0 +1,161 @@
+# ------------------ PersistentVolume (PV) ------------------
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: my-pv
+spec:
+  capacity:
+    storage: 10Gi  # Adjust size
+  accessModes:
+    - ReadWriteMany  # Choose RWX, RWO, or ROX
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: my-storage-class
+  hostPath:
+    path: "/mnt/data"  # Change this for your setup
+
+---
+# ------------------ PersistentVolumeClaim (PVC) ------------------
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-pvc
+spec:
+  accessModes:
+    - ReadWriteMany  # Match PV access mode
+  resources:
+    requests:
+      storage: 10Gi  # Request size within PV limit
+  storageClassName: my-storage-class
+
+---
+# ------------------ Deployment 1 ------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-prep
+spec:
+  replicas: 3  # Adjust replicas
+  selector:
+    matchLabels:
+      app: shared
+  template:
+    metadata:
+      labels:
+        app: shared  # Shared label for service
+    spec:
+      containers:
+      - name: data-prep-container
+        image: my-data-prep-image:latest  # Replace with your image
+        ports:
+        - containerPort: 6650
+
+---
+# ------------------ Deployment 2 ------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-train
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: shared
+  template:
+    metadata:
+      labels:
+        app: shared
+    spec:
+      containers:
+      - name: model-train-container
+        image: my-model-train-image:latest
+        ports:
+        - containerPort: 6651
+        volumeMounts:
+        - mountPath: "/data"
+          name: shared-storage
+      volumes:
+      - name: shared-storage
+        persistentVolumeClaim:
+          claimName: my-pvc
+
+---
+# ------------------ Deployment 3 ------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-pred
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: shared
+  template:
+    metadata:
+      labels:
+        app: shared
+    spec:
+      containers:
+      - name: model-pred-container
+        image: my-model-pred-image:latest
+        ports:
+        - containerPort: 6652
+        volumeMounts:
+        - mountPath: "/data"
+          name: shared-storage
+      volumes:
+      - name: shared-storage
+        persistentVolumeClaim:
+          claimName: my-pvc
+
+---
+# ------------------ Deployment 4 ------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gui
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: shared
+  template:
+    metadata:
+      labels:
+        app: shared
+    spec:
+      containers:
+      - name: gui-container
+        image: my-gui-image:latest
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - mountPath: "/data"
+          name: shared-storage
+      volumes:
+      - name: shared-storage
+        persistentVolumeClaim:
+          claimName: my-pvc
+
+---
+# ------------------ Multi-Port Service ------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: multi-app-service
+spec:
+  selector:
+    app: shared  # Matches all 4 Deployments
+  ports:
+    - name: data-prep
+      port: 6650      # External port
+      targetPort: 6650  # data-prep container port
+    - name: model-train
+      port: 6651      # External port
+      targetPort: 6651  # model-train container port
+    - name: model-pred
+      port: 6652
+      targetPort: 6652
+    - name: gui
+      port: 88
+      targetPort: 8080
+  type: ClusterIP  # Change to NodePort or LoadBalancer if needed
