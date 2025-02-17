@@ -6,6 +6,7 @@ import os
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 import random
+import time
 status = 0
 app = Flask(__name__)
 app.secret_key = '1'
@@ -46,15 +47,19 @@ def upload_files():
     csv_df.to_csv(output, index=False)
     output.seek(0)
 
-    cookie_dict[session_id]["status"] = "2-1:Finishing Data Preparation"
+    for x in range(5):
+        cookie_dict[session_id]["percentage"] = x * 15
+        time.sleep(1.4)
+
+    cookie_dict[session_id]["status"] = "1-2:Finishing Data Preparation"
     cookie_dict[session_id]["percentage"] = 100
     print(cookie_dict)
     # Send back the processed CSV as a response
     return send_file(output, mimetype='text/csv', as_attachment=True, download_name="processed_output.csv"), 221
 
-@app.route('/poll', methods=['POST'])
+@app.route('/poll', methods=['GET'])
 def poll():
-    return cookie_dict[session.get("id")]
+    return (list(cookie_dict.values()) + ["No cookies!"])[-2:][0] if session.get("id") is None else cookie_dict[session.get("id")]
 
 def binary_sex(data):
     data['Sex'] = data['Sex'].replace({'male': 0, 'female': 1})

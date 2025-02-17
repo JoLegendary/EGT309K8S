@@ -57,9 +57,9 @@ def upload_files():
     return send_file(output, mimetype='text/csv', as_attachment=True, download_name="processed_output.csv"), 223
 
 
-@app.route('/poll', methods=['POST'])
+@app.route('/poll', methods=['GET'])
 def poll():
-    return cookie_dict[session.get("id")]
+    return (list(cookie_dict.values()) + ["No cookies!"])[-2:][0] if session.get("id") is None else cookie_dict[session.get("id")]
 
 
 def predicting_the_test_dataset(clean_data, predict_data, loaded_model, session_id):

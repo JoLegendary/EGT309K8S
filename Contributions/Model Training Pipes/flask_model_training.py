@@ -53,9 +53,9 @@ def upload_csv():
     return send_file(model_pkl, mimetype='application/octet-stream', as_attachment=True, download_name="model.pkl"), 222
 
 
-@app.route('/poll', methods=['POST'])
+@app.route('/poll', methods=['GET'])
 def poll():
-    return cookie_dict[session.get("id")]
+    return (list(cookie_dict.values()) + ["No cookies!"])[-2:][0] if session.get("id") is None else cookie_dict[session.get("id")]
 
 def random_forest_train(df, xfeature, ytarget, parameters, session_id):
     X = df[xfeature]
