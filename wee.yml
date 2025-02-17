@@ -28,85 +28,118 @@ spec:
   storageClassName: my-storage-class
 
 ---
-# ------------------ Pod 1 ------------------
-apiVersion: v1
-kind: Pod
+# ------------------ StatefulSet 1 ------------------
+apiVersion: apps/v1
+kind: StatefulSet
 metadata:
   name: data-prep
-  labels:
-    app: shared
 spec:
-  containers:
-  - name: data-prep-container
-    image: alaxcia/egt309dataprep:v1
-    ports:
-    - containerPort: 6650
+  serviceName: "data-prep"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shared
+  template:
+    metadata:
+      labels:
+        app: shared
+    spec:
+      containers:
+      - name: data-prep-container
+        image: alaxcia/egt309dataprep:v1
+        ports:
+        - containerPort: 6650
 
 ---
-# ------------------ Pod 2 ------------------
-apiVersion: v1
-kind: Pod
+# ------------------ StatefulSet 2 ------------------
+apiVersion: apps/v1
+kind: StatefulSet
 metadata:
   name: model-train
-  labels:
-    app: shared
 spec:
-  containers:
-  - name: model-train-container
-    image: alaxcia/egt309modeltrain:v1
-    ports:
-    - containerPort: 6651
-    volumeMounts:
-    - mountPath: "/data"
-      name: shared-storage
-  volumes:
-  - name: shared-storage
-    persistentVolumeClaim:
-      claimName: my-pvc
+  serviceName: "model-train"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shared
+  template:
+    metadata:
+      labels:
+        app: shared
+    spec:
+      containers:
+      - name: model-train-container
+        image: alaxcia/egt309modeltrain:v1
+        ports:
+        - containerPort: 6651
+        volumeMounts:
+        - mountPath: "/data"
+          name: shared-storage
+      volumes:
+      - name: shared-storage
+        persistentVolumeClaim:
+          claimName: my-pvc
 
 ---
-# ------------------ Pod 3 ------------------
-apiVersion: v1
-kind: Pod
+# ------------------ StatefulSet 3 ------------------
+apiVersion: apps/v1
+kind: StatefulSet
 metadata:
   name: model-pred
-  labels:
-    app: shared
 spec:
-  containers:
-  - name: model-pred-container
-    image: alaxcia/egt309modelpred:v1
-    ports:
-    - containerPort: 6652
-    volumeMounts:
-    - mountPath: "/data"
-      name: shared-storage
-  volumes:
-  - name: shared-storage
-    persistentVolumeClaim:
-      claimName: my-pvc
+  serviceName: "model-pred"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shared
+  template:
+    metadata:
+      labels:
+        app: shared
+    spec:
+      containers:
+      - name: model-pred-container
+        image: alaxcia/egt309modelpred:v1
+        ports:
+        - containerPort: 6652
+        volumeMounts:
+        - mountPath: "/data"
+          name: shared-storage
+      volumes:
+      - name: shared-storage
+        persistentVolumeClaim:
+          claimName: my-pvc
 
 ---
-# ------------------ Pod 4 ------------------
-apiVersion: v1
-kind: Pod
+# ------------------ StatefulSet 4 ------------------
+apiVersion: apps/v1
+kind: StatefulSet
 metadata:
   name: gui
-  labels:
-    app: shared
 spec:
-  containers:
-  - name: gui-container
-    image: alaxcia/egt309testrun:v1.2
-    ports:
-    - containerPort: 8080
-    volumeMounts:
-    - mountPath: "/data"
-      name: shared-storage
-  volumes:
-  - name: shared-storage
-    persistentVolumeClaim:
-      claimName: my-pvc
+  serviceName: "gui"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shared
+  template:
+    metadata:
+      labels:
+        app: shared
+    spec:
+      containers:
+      - name: gui-container
+        image: alaxcia/egt309testrun:v1.5
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - mountPath: "/data"
+          name: shared-storage
+      volumes:
+      - name: shared-storage
+        persistentVolumeClaim:
+          claimName: my-pvc
+
 
 ---
 # ------------------ Multi-Port Service ------------------
@@ -115,20 +148,20 @@ kind: Service
 metadata:
   name: multi-app-service
 spec:
-  sessionAffinity: ClientIP  # Sticky sessions enabled
+  clusterIP: None  # Headless service
   selector:
-    app: shared  # Matches all 4 Deployments
+    app: shared
   ports:
     - name: data-prep
-      port: 6650      # External port
-      targetPort: 6650  # data-prep container port
+      port: 6650
+      targetPort: 6650
     - name: model-train
-      port: 6651      # External port
-      targetPort: 6651  # model-train container port
+      port: 6651
+      targetPort: 6651
     - name: model-pred
       port: 6652
       targetPort: 6652
     - name: gui
       port: 88
       targetPort: 8080
-  type: ClusterIP  # Change to NodePort or LoadBalancer if needed
+  # Change to NodePort or LoadBalancer if needed
