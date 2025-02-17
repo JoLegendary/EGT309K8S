@@ -9,4 +9,4 @@ COPY . .
 RUN pip install -r requirements.txt
 EXPOSE 8080
 # Command to run the script.py
-CMD ["python", "gui.py"]
+CMD ["streamlit", "run", "src/Get_Started.py"]
