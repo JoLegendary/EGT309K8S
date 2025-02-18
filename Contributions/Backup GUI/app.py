@@ -17,7 +17,7 @@ def run_pipeline():
     files = {
         'csv': ('data.csv', csv_data, 'text/csv'),
     }
-
+    
     response_prep = requests.post(url_prep, files=files)
 
     # Check the response
