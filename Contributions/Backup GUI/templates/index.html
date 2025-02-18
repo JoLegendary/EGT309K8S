@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask File Upload & Download</title>
+    <script>
+        let trainUploaded = false;
+        let testUploaded = false;
+
+        function uploadFile(type) {
+            let inputId = type === "train" ? "train_file" : "test_file";
+            let fileInput = document.getElementById(inputId);
+            let formData = new FormData();
+            formData.append(type === "train" ? "train_file" : "test_file", fileInput.files[0]);
+
+            fetch(type === "train" ? "/upload_train" : "/upload_test", {
+                method: "POST",
+                body: formData
+            }).then(response => response.text())
+              .then(data => {
+                  alert(data);
+                  if (type === "train") trainUploaded = true;
+                  if (type === "test") testUploaded = true;
+                  document.getElementById("run_pipeline").disabled = !(trainUploaded && testUploaded);
+              });
+        }
+
+        function runPipeline() {
+            fetch("/run_pipeline", { method: "POST" })
+                .then(response => response.blob())
+                .then(blob => {
+                    let link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = "prediction.csv";
+                    link.click();
+                });
+        }
+    </script>
+</head>
+<body>
+    <h1>Upload Train & Test CSV Files</h1>
+
+    <label>Train File:</label>
+    <input type="file" id="train_file" accept=".csv">
+    <button onclick="uploadFile('train')">Upload Train</button>
+    <br><br>
+
+    <label>Test File:</label>
+    <input type="file" id="test_file" accept=".csv">
+    <button onclick="uploadFile('test')">Upload Test</button>
+    <br><br>
+
+    <button id="run_pipeline" onclick="runPipeline()" disabled>Run Pipeline & Download</button>
+</body>
+</html>
