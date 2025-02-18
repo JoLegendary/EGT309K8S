@@ -9,9 +9,9 @@ csv_data = None
 test_data = None
 output_filename = "prediction.csv"
 progress = {
-    'data_prep': {'status': 'Waiting...', 'percentage': 0},
-    'model_train': {'status': 'Waiting...', 'percentage': 0},
-    'model_pred': {'status': 'Waiting...', 'percentage': 0}
+    'data_prep': {'status': 'Waiting...', 'percentage': 100, 'colour':'bg-warning'},
+    'model_train': {'status': 'Waiting...', 'percentage': 100, 'colour':'bg-warning'},
+    'model_pred': {'status': 'Waiting...', 'percentage': 100, 'colour':'bg-warning'}
 }
 
 def run_pipeline():
@@ -24,10 +24,10 @@ def run_pipeline():
         'csv': ('data.csv', csv_data, 'text/csv'),
     }
     
-    progress['data_prep'] = {'status': 'Data Preparation Starting', 'percentage': 1}
+    progress['data_prep'] = {'status': 'Data Preparation Starting', 'percentage': 100, 'colour':'bg-primary'}
     response_prep = requests.post(url_prep, files=files)
     response_poll_prep = requests.get("http://multi-app-service.default.svc.cluster.local:6650/poll")
-    progress['data_prep'] = {'status': 'Data Preparation Completed', 'percentage': 100}
+    progress['data_prep'] = {'status': 'Data Preparation Completed', 'percentage': 100, 'colour':'bg-success'}
     print(response_poll_prep.status_code, response_poll_prep.content)
     # Check the response
     print(response_prep.status_code)
@@ -35,22 +35,22 @@ def run_pipeline():
         'csv': ('data.csv', response_prep.content, 'text/csv'),
     }
 
-    progress['model_train'] = {'status': 'Model Training Starting', 'percentage': 1}
+    progress['model_train'] = {'status': 'Model Training Starting', 'percentage': 100, 'colour':'bg-primary'}
     response_train = requests.post(url_train, files=data)
     response_poll_train = requests.get("http://multi-app-service.default.svc.cluster.local:6651/poll")
     print(response_poll_train.status_code, response_poll_train.content)
     print(response_train.status_code)
 
-    progress['model_train'] = {'status': 'Model Training Completed', 'percentage': 100}
+    progress['model_train'] = {'status': 'Model Training Completed', 'percentage': 100, 'colour':'bg-success'}
 
     pred = {
         'csv': ('data.csv', test_data, 'text/csv'),
         'pkl': None, #('model.pkl', response_train.content, 'application/octet-stream'),
     }
-    progress['model_pred'] = {'status': 'Model Prediction Completed', 'percentage': 1}
+    progress['model_pred'] = {'status': 'Model Prediction Completed', 'percentage': 100, 'colour':'bg-primary'}
     response_pred = requests.post(url_pred, files=pred)
     response_poll_pred = requests.get("http://multi-app-service.default.svc.cluster.local:6652/poll")
-    progress['model_pred'] = {'status': 'Model Prediction Completed', 'percentage': 100}
+    progress['model_pred'] = {'status': 'Model Prediction Completed', 'percentage': 100, 'colour':'bg-success'}
     print(response_poll_pred.status_code, response_poll_pred.content)
     print(response_pred.status_code)
     if response_pred.status_code == 223:

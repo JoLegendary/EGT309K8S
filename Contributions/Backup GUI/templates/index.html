@@ -75,19 +75,21 @@
             pollProgress();
         }
 
-        function updateProgress(progressBarId, status, percentage) {
+        function updateProgress(progressBarId, status, percentage, colour) {
             let progressBar = document.getElementById(progressBarId);
             progressBar.style.width = percentage + "%";
             progressBar.innerText = status;
+            progressBar.classList.remove("bg-info", "bg-success", "bg-warning", "bg-danger", "bg-primary");
+            progressBar.classList.add(colour);
         }
 
         function pollProgress() {
             fetch("/poll_status")
                 .then(response => response.json())
                 .then(data => {
-                    updateProgress("dataprep_progress", data.data_prep.status, data.data_prep.percentage);
-                    updateProgress("modeltrain_progress", data.model_train.status, data.model_train.percentage);
-                    updateProgress("modelpred_progress", data.model_pred.status, data.model_pred.percentage);
+                    updateProgress("dataprep_progress", data.data_prep.status, data.data_prep.percentage, data.data_prep.colour);
+                    updateProgress("modeltrain_progress", data.model_train.status, data.model_train.percentage, data.model_train.colour);
+                    updateProgress("modelpred_progress", data.model_pred.status, data.model_pred.percentage, data.model_pred.colour);
                 })
                 .catch(error => {
                     console.error('Error fetching progress:', error);
