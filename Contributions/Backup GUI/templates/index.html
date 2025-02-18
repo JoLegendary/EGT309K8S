@@ -11,7 +11,20 @@
     <script>
         let trainUploaded = false;
         let testUploaded = false;
-
+        document.addEventListener("DOMContentLoaded", () => {
+        // Run the reset function when the page loads or is refreshed
+            fetch("/reset")
+                .then(response => response.text())
+                .then(data => {
+                    console.log("Page reset:", data);
+                })
+                .catch(error => {
+                    console.error("Error during reset:", error);
+                });
+            
+            // Hide progress section initially
+            document.getElementById("progress_section").style.display = "none";
+        });
         function uploadFile(type) {
             let inputId = type === "train" ? "train_file" : "test_file";
             let fileInput = document.getElementById(inputId);

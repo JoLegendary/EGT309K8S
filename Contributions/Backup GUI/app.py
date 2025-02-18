@@ -100,7 +100,17 @@ def trigger_pipeline():
 
 @app.route("/poll_status", methods=["GET"])
 def poll_status():
+    print(progress)
     return jsonify(progress)
 
+@app.route("/reset", methods=["GET"])
+def reset():
+    global progress
+    progress = {
+        'data_prep': {'status': 'Waiting...', 'percentage': 100, 'colour':'bg-warning'},
+        'model_train': {'status': 'Waiting...', 'percentage': 100, 'colour':'bg-warning'},
+        'model_pred': {'status': 'Waiting...', 'percentage': 100, 'colour':'bg-warning'}
+    }
+    return "Done", 200
 if __name__ == "__main__":
     app.run(debug=True, port=8080, host='0.0.0.0')

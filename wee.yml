@@ -35,7 +35,7 @@ metadata:
   name: data-prep
 spec:
   serviceName: "data-prep"
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: shared
@@ -58,7 +58,7 @@ metadata:
   name: model-train
 spec:
   serviceName: "model-train"
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: shared
@@ -88,7 +88,7 @@ metadata:
   name: model-pred
 spec:
   serviceName: "model-pred"
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: shared
@@ -129,7 +129,7 @@ spec:
     spec:
       containers:
       - name: gui-container
-        image: alaxcia/egt309backupgui:v1.12   #testrun:v1.6
+        image: alaxcia/egt309backupgui:v1.13   #testrun:v1.6
         ports:
         - containerPort: 8080
         volumeMounts:
