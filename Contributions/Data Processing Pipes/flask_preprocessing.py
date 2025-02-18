@@ -47,10 +47,6 @@ def upload_files():
     csv_df.to_csv(output, index=False)
     output.seek(0)
 
-    for x in range(5):
-        cookie_dict[session_id]["percentage"] = x * 15
-        time.sleep(1.4)
-
     cookie_dict[session_id]["status"] = "1-2:Finishing Data Preparation"
     cookie_dict[session_id]["percentage"] = 100
     print(cookie_dict)
