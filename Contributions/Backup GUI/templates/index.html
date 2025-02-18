@@ -3,15 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Upload & Pipeline</title>
+    <title>Pipeline Execution</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <script>
         let trainUploaded = false;
         let testUploaded = false;
-
+        document.addEventListener("DOMContentLoaded", () => {
+        // Run the reset function when the page loads or is refreshed
+            fetch("/reset")
+                .then(response => response.text())
+                .then(data => {
+                    console.log("Page reset:", data);
+                })
+                .catch(error => {
+                    console.error("Error during reset:", error);
+                });
+            
+            // Hide progress section initially
+            document.getElementById("progress_section").style.display = "none";
+        });
         function uploadFile(type) {
             let inputId = type === "train" ? "train_file" : "test_file";
             let fileInput = document.getElementById(inputId);
@@ -52,6 +65,9 @@
             runButton.innerText = "Processing...";
             runButton.disabled = true;
 
+            // Show the progress bars when "Run Pipeline" is clicked
+            document.getElementById("progress_section").style.display = "block";
+
             fetch("/run_pipeline", { method: "POST" })
                 .then(response => response.blob())
                 .then(blob => {
@@ -67,7 +83,39 @@
                     runButton.innerText = "Error!";
                     runButton.classList.add("btn-danger");
                 });
+
+            // Start polling the progress bars after clicking "Run Pipeline"
+            pollProgress();
         }
+
+        function updateProgress(progressBarId, status, percentage, colour) {
+            let progressBar = document.getElementById(progressBarId);
+            progressBar.style.width = percentage + "%";
+            progressBar.innerText = status;
+            progressBar.classList.remove("bg-info", "bg-success", "bg-warning", "bg-danger", "bg-primary");
+            progressBar.classList.add(colour);
+        }
+
+        function pollProgress() {
+            fetch("/poll_status")
+                .then(response => response.json())
+                .then(data => {
+                    updateProgress("dataprep_progress", data.data_prep.status, data.data_prep.percentage, data.data_prep.colour);
+                    updateProgress("modeltrain_progress", data.model_train.status, data.model_train.percentage, data.model_train.colour);
+                    updateProgress("modelpred_progress", data.model_pred.status, data.model_pred.percentage, data.model_pred.colour);
+                })
+                .catch(error => {
+                    console.error('Error fetching progress:', error);
+                });
+
+            setTimeout(pollProgress, 500); // Poll every 0.5 seconds
+        }
+
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Hide progress section initially
+            document.getElementById("progress_section").style.display = "none";
+        });
     </script>
 
     <style>
@@ -121,6 +169,34 @@
     <!-- Run Pipeline -->
     <div class="text-center">
         <button id="run_pipeline" class="btn btn-success" onclick="runPipeline()" disabled>Run Pipeline & Download</button>
+    </div>
+
+    <hr>
+    
+    <!-- Progress Tracking for Pipeline (Initially Hidden) -->
+    <h4 class="text-center">Pipeline Progress Status</h4>
+
+    <div id="progress_section">
+        <div class="mb-3">
+            <label class="form-label">Data Preparation:</label>
+            <div class="progress">
+                <div id="dataprep_progress" class="progress-bar bg-info" style="width: 0%">Waiting...</div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Model Training:</label>
+            <div class="progress">
+                <div id="modeltrain_progress" class="progress-bar bg-info" style="width: 0%">Waiting...</div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Model Prediction:</label>
+            <div class="progress">
+                <div id="modelpred_progress" class="progress-bar bg-info" style="width: 0%">Waiting...</div>
+            </div>
+        </div>
     </div>
 </div>
 

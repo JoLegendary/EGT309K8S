@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file, session
+from flask import Flask, request, send_file, session, jsonify
 import pandas as pd
 import pickle
 from io import BytesIO
@@ -10,8 +10,10 @@ import random
 app = Flask(__name__)
 app.secret_key = '1'
 cookie_dict = {}
+session_id = False
 @app.route('/upload', methods=['POST'])
 def upload_files():
+    global session_id, cookie_dict
     # Get files from request
     print(f"{session.get("id","No id yet")} is logged in")
     if session.get("id") is None:
@@ -62,10 +64,11 @@ def upload_files():
 
 @app.route('/poll', methods=['GET'])
 def poll():
-    if session.get("id"):
-        return cookie_dict[session.get("id")]
+    if session_id:
+        return jsonify(cookie_dict[session_id]), 200
     else:
-        return None
+        # Return a valid response if no session id exists
+        return jsonify({"status": "Waiting...", "percentage": 0}), 200
     #return (list(cookie_dict.values()) + ["No cookies!"])[-2:][0] if session.get("id") is None else cookie_dict[session.get("id")]
 
 

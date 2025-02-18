@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, jsonify
 import requests
 import io
 import pickle
@@ -8,8 +8,14 @@ app = Flask(__name__)
 csv_data = None
 test_data = None
 output_filename = "prediction.csv"
+progress = {
+    'data_prep': {'status': 'Waiting...', 'percentage': 100, 'colour':'bg-warning'},
+    'model_train': {'status': 'Waiting...', 'percentage': 100, 'colour':'bg-warning'},
+    'model_pred': {'status': 'Waiting...', 'percentage': 100, 'colour':'bg-warning'}
+}
 
 def run_pipeline():
+    global progress
     print("Pipeline is running...")  # Replace with actual processing logic
     url_prep = 'http://multi-app-service.default.svc.cluster.local:6650/upload'
     url_train = 'http://multi-app-service.default.svc.cluster.local:6651/upload'
@@ -18,24 +24,35 @@ def run_pipeline():
         'csv': ('data.csv', csv_data, 'text/csv'),
     }
     
+    progress['data_prep'] = {'status': 'Data Preparation Starting', 'percentage': 100, 'colour':'bg-primary'}
     response_prep = requests.post(url_prep, files=files)
-
+    response_poll_prep = requests.get("http://multi-app-service.default.svc.cluster.local:6650/poll")
+    progress['data_prep'] = {'status': 'Data Preparation Completed', 'percentage': 100, 'colour':'bg-success'}
+    print(response_poll_prep.status_code, response_poll_prep.content)
     # Check the response
     print(response_prep.status_code)
     data = {
         'csv': ('data.csv', response_prep.content, 'text/csv'),
     }
 
+    progress['model_train'] = {'status': 'Model Training Starting', 'percentage': 100, 'colour':'bg-primary'}
     response_train = requests.post(url_train, files=data)
-
+    response_poll_train = requests.get("http://multi-app-service.default.svc.cluster.local:6651/poll")
+    print(response_poll_train.status_code, response_poll_train.content)
     print(response_train.status_code)
+
+    progress['model_train'] = {'status': 'Model Training Completed', 'percentage': 100, 'colour':'bg-success'}
 
     pred = {
         'csv': ('data.csv', test_data, 'text/csv'),
         'pkl': None, #('model.pkl', response_train.content, 'application/octet-stream'),
     }
+    progress['model_pred'] = {'status': 'Model Prediction Completed', 'percentage': 100, 'colour':'bg-primary'}
     response_pred = requests.post(url_pred, files=pred)
-
+    response_poll_pred = requests.get("http://multi-app-service.default.svc.cluster.local:6652/poll")
+    progress['model_pred'] = {'status': 'Model Prediction Completed', 'percentage': 100, 'colour':'bg-success'}
+    print(response_poll_pred.status_code, response_poll_pred.content)
+    print(response_pred.status_code)
     if response_pred.status_code == 223:
         output_buffer = io.BytesIO(response_pred.content)  # Save the response file
         return output_buffer
@@ -81,5 +98,19 @@ def trigger_pipeline():
         return "Pipeline failed!", 400
     return "Files not uploaded!", 400
 
+@app.route("/poll_status", methods=["GET"])
+def poll_status():
+    print(progress)
+    return jsonify(progress)
+
+@app.route("/reset", methods=["GET"])
+def reset():
+    global progress
+    progress = {
+        'data_prep': {'status': 'Waiting...', 'percentage': 100, 'colour':'bg-warning'},
+        'model_train': {'status': 'Waiting...', 'percentage': 100, 'colour':'bg-warning'},
+        'model_pred': {'status': 'Waiting...', 'percentage': 100, 'colour':'bg-warning'}
+    }
+    return "Done", 200
 if __name__ == "__main__":
     app.run(debug=True, port=8080, host='0.0.0.0')
