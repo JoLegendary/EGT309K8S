@@ -62,7 +62,11 @@ def upload_files():
 
 @app.route('/poll', methods=['GET'])
 def poll():
-    return (list(cookie_dict.values()) + ["No cookies!"])[-2:][0] if session.get("id") is None else cookie_dict[session.get("id")]
+    if session.get("id"):
+        return cookie_dict[session.get("id")]
+    else:
+        return None
+    #return (list(cookie_dict.values()) + ["No cookies!"])[-2:][0] if session.get("id") is None else cookie_dict[session.get("id")]
 
 
 def predicting_the_test_dataset(clean_data, predict_data, loaded_model, session_id):

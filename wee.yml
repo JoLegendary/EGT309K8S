@@ -129,7 +129,7 @@ spec:
     spec:
       containers:
       - name: gui-container
-        image: alaxcia/egt309backupgui:v1.2   #testrun:v1.6
+        image: alaxcia/egt309backupgui:v1.3   #testrun:v1.6
         ports:
         - containerPort: 8080
         volumeMounts:
