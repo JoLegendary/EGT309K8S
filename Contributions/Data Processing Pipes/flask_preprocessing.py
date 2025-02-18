@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file, session
+from flask import Flask, request, send_file, session, jsonify
 import pandas as pd
 import pickle
 from io import BytesIO, StringIO
@@ -11,8 +11,10 @@ status = 0
 app = Flask(__name__)
 app.secret_key = '1'
 cookie_dict = {}
+session_id = False
 @app.route('/upload', methods=['POST'])
 def upload_files():
+    global session_id, cookie_dict
     # Get files from request
     print(f"{session.get("id","No id yet")} is logged in")
     if session.get("id") is None:
@@ -25,7 +27,7 @@ def upload_files():
     if not cookie_dict.get(session.get("id")):
         cookie_dict.update({session.get("id"):{"status": "0-0:Starting", "percentage": 0}})
     session_id = session.get("id")
-
+    print(session_id)
     csv_file = request.files.get('csv')
 
     csv_df = pd.read_csv(csv_file )
@@ -47,10 +49,6 @@ def upload_files():
     csv_df.to_csv(output, index=False)
     output.seek(0)
 
-    for x in range(5):
-        cookie_dict[session_id]["percentage"] = x * 15
-        time.sleep(1.4)
-
     cookie_dict[session_id]["status"] = "1-2:Finishing Data Preparation"
     cookie_dict[session_id]["percentage"] = 100
     print(cookie_dict)
@@ -59,10 +57,11 @@ def upload_files():
 
 @app.route('/poll', methods=['GET'])
 def poll():
-    if session.get("id"):
-        return cookie_dict[session.get("id")]
+    if session_id:
+        return jsonify(cookie_dict[session_id]), 200
     else:
-        return None
+        # Return a valid response if no session id exists
+        return jsonify({"status": "Waiting...", "percentage": 0}), 200
     #return (list(cookie_dict.values()) + ["No cookies!"])[-2:][0] if session.get("id") is None else cookie_dict[session.get("id")]
 
 def binary_sex(data):

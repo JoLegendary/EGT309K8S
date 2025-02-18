@@ -9,4 +9,4 @@ COPY . .
 RUN pip install -r requirements.txt
 EXPOSE 6651
 # Command to run the script.py
-ENTRYPOINT ["python", "flask_model_training.py"]
+ENTRYPOINT ["python", "-u", "flask_model_training.py"]

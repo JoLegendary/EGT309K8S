@@ -46,7 +46,7 @@ spec:
     spec:
       containers:
       - name: data-prep-container
-        image: alaxcia/egt309dataprep:v1.1
+        image: alaxcia/egt309dataprep:v1.3
         ports:
         - containerPort: 6650
 
@@ -69,7 +69,7 @@ spec:
     spec:
       containers:
       - name: model-train-container
-        image: alaxcia/egt309modeltrain:v1.4
+        image: alaxcia/egt309modeltrain:v1.6
         ports:
         - containerPort: 6651
         volumeMounts:
@@ -99,7 +99,7 @@ spec:
     spec:
       containers:
       - name: model-pred-container
-        image: alaxcia/egt309modelpred:v1.4
+        image: alaxcia/egt309modelpred:v1.6
         ports:
         - containerPort: 6652
         volumeMounts:
@@ -129,7 +129,7 @@ spec:
     spec:
       containers:
       - name: gui-container
-        image: alaxcia/egt309backupgui:v1.3   #testrun:v1.6
+        image: alaxcia/egt309backupgui:v1.7   #testrun:v1.6
         ports:
         - containerPort: 8080
         volumeMounts:

@@ -19,7 +19,8 @@ def run_pipeline():
     }
 
     response_prep = requests.post(url_prep, files=files)
-
+    response_poll_prep = requests.get("http://multi-app-service.default.svc.cluster.local:6650/poll")
+    print(response_poll_prep.status_code, response_poll_prep.content)
     # Check the response
     print(response_prep.status_code)
     data = {
@@ -27,7 +28,8 @@ def run_pipeline():
     }
 
     response_train = requests.post(url_train, files=data)
-
+    response_poll_train = requests.get("http://multi-app-service.default.svc.cluster.local:6651/poll")
+    print(response_poll_train.status_code, response_poll_train.content)
     print(response_train.status_code)
 
     pred = {
@@ -35,7 +37,9 @@ def run_pipeline():
         'pkl': None, #('model.pkl', response_train.content, 'application/octet-stream'),
     }
     response_pred = requests.post(url_pred, files=pred)
-
+    response_poll_pred = requests.get("http://multi-app-service.default.svc.cluster.local:6652/poll")
+    print(response_poll_pred.status_code, response_poll_pred.content)
+    print(response_pred.status_code)
     if response_pred.status_code == 223:
         output_buffer = io.BytesIO(response_pred.content)  # Save the response file
         return output_buffer
