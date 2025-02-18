@@ -28,13 +28,12 @@ spec:
   storageClassName: my-storage-class
 
 ---
-# ------------------ StatefulSet 1 ------------------
+# ------------------ Deployment 1 ------------------
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: data-prep
 spec:
-  serviceName: "data-prep"
   replicas: 3
   selector:
     matchLabels:
@@ -49,15 +48,19 @@ spec:
         image: alaxcia/egt309dataprep:v1.3
         ports:
         - containerPort: 6650
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
 
 ---
-# ------------------ StatefulSet 2 ------------------
+# ------------------ Deployment 2 ------------------
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: model-train
 spec:
-  serviceName: "model-train"
   replicas: 3
   selector:
     matchLabels:
@@ -79,15 +82,19 @@ spec:
       - name: shared-storage
         persistentVolumeClaim:
           claimName: my-pvc
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
 
 ---
-# ------------------ StatefulSet 3 ------------------
+# ------------------ Deployment 3 ------------------
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: model-pred
 spec:
-  serviceName: "model-pred"
   replicas: 3
   selector:
     matchLabels:
@@ -109,15 +116,19 @@ spec:
       - name: shared-storage
         persistentVolumeClaim:
           claimName: my-pvc
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
 
 ---
-# ------------------ StatefulSet 4 ------------------
+# ------------------ Deployment 4 ------------------
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: gui
 spec:
-  serviceName: "gui"
   replicas: 1
   selector:
     matchLabels:
@@ -139,6 +150,12 @@ spec:
       - name: shared-storage
         persistentVolumeClaim:
           claimName: my-pvc
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
 
 
 ---
