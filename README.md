@@ -6,15 +6,22 @@
 Clone repo
 > git clone https://github.com/JoLegendary/EGT309K8S.git
 
+Enter the diretory
+
 > cd EGT309KS
 
+Depending on which GUI you want the yml file would be different
+
+For Streamlit
 > kubectl apply -f Streamlit.yml
 
 or
-
+For Flask
 > kubectl apply -f Flask.yml
 
+Command for minikube to expose the service to the "outside"
 > minikube service gui-service --url
+
 Copy the URL and paste into Web Browser
 
 ## Streamlit
