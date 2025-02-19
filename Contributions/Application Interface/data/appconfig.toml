@@ -1,7 +1,0 @@
-[services]
-
-[services.URI]
-data_prep = "http://multi-app-service.default.svc.cluster.local:6650"
-model_train = "http://multi-app-service.default.svc.cluster.local:6651"
-predict = "http://multi-app-service.default.svc.cluster.local:6652"
-

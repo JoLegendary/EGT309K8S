@@ -44,11 +44,10 @@ def upload_files():
 
     cookie_dict[session_id]["status"] = "1-1:Files Read, Preparing test data"
     cookie_dict[session_id]["percentage"] = 5
-    
+    clean_data = csv_df
     csv_df = combined_data_preparation(csv_df, ['Age', 'Ticket', 'PassengerId', 'Embarked', 'Name', 'Cabin'], session_id)
     # Example processing: Let's assume the model is used to make predictions
     # Assuming the model is a regression model and csv_df has required features for prediction
-    clean_data = csv_df
     csv_df = predicting_the_test_dataset(clean_data, csv_df, model, session_id)
     # Convert the processed DataFrame to CSV (in-memory)
     output = BytesIO()
@@ -74,12 +73,12 @@ def poll():
 
 def predicting_the_test_dataset(clean_data, predict_data, loaded_model, session_id):
 
-    predict_data['predicted_survived'] = loaded_model.predict(clean_data[['Age', 'Sex', 'Pclass', 'SibSp', 'Parch']])
+    clean_data['predicted_survived'] = loaded_model.predict(predict_data[['Age', 'Sex', 'Pclass', 'SibSp', 'Parch']])
 
     cookie_dict[session_id]["status"] = "1-6:Predicted target values on test data"
     cookie_dict[session_id]["percentage"] = 90
 
-    return predict_data
+    return clean_data
 
 
 def binary_sex(data):

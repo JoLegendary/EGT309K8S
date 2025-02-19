@@ -37,9 +37,10 @@ uploaded_predict = None
 uploaded_predict_model = None
 
 
-with open("data/appconfig.toml", "rb") as f:
+with open("/datas/appconfig.toml", "rb") as f:
     config = tomllib.load(f)
     servicesURI = config["services"]["URI"]
+    print(servicesURI)
 
 def status_breakdown(input):
     regexer = regex.compile(r"""^(\d+)-(\d+)(?::(.*))?$""")
