@@ -9,7 +9,9 @@ Clone repo
 > cd EGT309KS
 
 > kubectl apply -f Streamlit.yml
+
 or
+
 > kubectl apply -f Flask.yml
 
 > minikube service gui-service --url
