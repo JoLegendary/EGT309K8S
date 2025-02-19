@@ -1,0 +1,194 @@
+# ------------------ PersistentVolume (PV) ------------------
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: my-pv
+spec:
+  capacity:
+    storage: 10Gi  # Adjust size
+  accessModes:
+    - ReadWriteMany  # Choose RWX, RWO, or ROX
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: my-storage-class
+  hostPath:
+    path: "/mnt/data"  # Change this for your setup
+
+---
+# ------------------ PersistentVolumeClaim (PVC) ------------------
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-pvc
+spec:
+  accessModes:
+    - ReadWriteMany  # Match PV access mode
+  resources:
+    requests:
+      storage: 10Gi  # Request size within PV limit
+  storageClassName: my-storage-class
+
+---
+# ------------------ Deployment 1 ------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-prep
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: shared
+  template:
+    metadata:
+      labels:
+        app: shared
+    spec:
+      containers:
+      - name: data-prep-container
+        image: alaxcia/egt309dataprep:v1.4
+        ports:
+        - containerPort: 6650
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+---
+# ------------------ Deployment 2 ------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-train
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: shared
+  template:
+    metadata:
+      labels:
+        app: shared
+    spec:
+      containers:
+      - name: model-train-container
+        image: alaxcia/egt309modeltrain:v1.7
+        ports:
+        - containerPort: 6651
+        volumeMounts:
+        - mountPath: "/data"
+          name: shared-storage
+      volumes:
+      - name: shared-storage
+        persistentVolumeClaim:
+          claimName: my-pvc
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+---
+# ------------------ Deployment 3 ------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-pred
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: shared
+  template:
+    metadata:
+      labels:
+        app: shared
+    spec:
+      containers:
+      - name: model-pred-container
+        image: alaxcia/egt309modelpred:v1.9
+        ports:
+        - containerPort: 6652
+        volumeMounts:
+        - mountPath: "/data"
+          name: shared-storage
+      volumes:
+      - name: shared-storage
+        persistentVolumeClaim:
+          claimName: my-pvc
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+---
+# ------------------ Deployment 4 ------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: share
+  template:
+    metadata:
+      labels:
+        app: share
+    spec:
+      containers:
+      - name: gui-container
+        image: alaxcia/backupgui:v1.14   #egt309gui:v1.3    #testrun:v1.6
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - mountPath: "/data"
+          name: shared-storage
+      volumes:
+      - name: shared-storage
+        persistentVolumeClaim:
+          claimName: my-pvc
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+
+
+---
+# ------------------ Multi-Port Service ------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: multi-app-service
+spec:
+  clusterIP: None  # Headless service
+  selector:
+    app: shared
+  ports:
+    - name: data-prep
+      port: 6650
+      targetPort: 6650
+    - name: model-train
+      port: 6651
+      targetPort: 6651
+    - name: model-pred
+      port: 6652
+      targetPort: 6652
+  # Change to NodePort or LoadBalancer if needed
+# ------------------ GUI Service ------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: gui-service
+spec:
+  selector:
+    app: share
+  ports:
+    - name: gui
+      port: 80
+      targetPort: 8080
+  # Change to NodePort or LoadBalancer if needed
