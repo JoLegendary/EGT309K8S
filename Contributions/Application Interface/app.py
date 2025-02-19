@@ -102,7 +102,8 @@ if __name__ == '__main__':
                 if mode in default_input: raise TimeoutError()
                 mode = (mode in yes_inputs) * 1 + (mode in no_inputs) * 0
                 break
-        except TimeoutError:
+        except TimeoutError as er:
+            if len(er.args) != 0: sys.stdout.write("\n")
             sys.stdout.write("Defaulting to default mode.\n")
             sys.stdout.flush()
             mode = default_mode
