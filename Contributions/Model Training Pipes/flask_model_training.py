@@ -30,6 +30,7 @@ def upload_csv():
     if not cookie_dict.get(session.get("id")):
         cookie_dict.update({session.get("id"):{"status": "0-0:Starting", "percentage": 0}})
     session_id = session.get("id")
+    cookie_dict.update({session_id:{"status": "0-0:Starting", "percentage": 0}})
     csv_file = request.files.get('csv')
 
     # Check if the CSV file is provided
